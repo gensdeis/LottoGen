@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로또 번호 생성기</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>로또 번호 생성기</h1>
+            <p>최근 100회차 당첨 번호 기반 분석을 통한 과학적 번호 추천</p>
+        </header>
+
+        <main>
+            <section class="info-section">
+                <div class="info-card">
+                    <h3>분석 데이터</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">회차:</span>
+                            <span id="analyzed-rounds" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">최근 회차:</span>
+                            <span id="latest-round" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">상태:</span>
+                            <span id="status" class="stat-value">데이터 로딩 중...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="control-section">
+                <div class="control-card">
+                    <h3>번호 생성</h3>
+                    <div class="controls">
+                        <div class="control-group">
+                            <label for="game-count">생성할 게임 수:</label>
+                            <select id="game-count">
+                                <option value="5" selected>5게임</option>
+                                <option value="3">3게임</option>
+                                <option value="10">10게임</option>
+                            </select>
+                        </div>
+                        <button id="generate-btn" class="generate-button">
+                            번호 생성
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="results-section" id="results-section" style="display: none;">
+                <div class="results-card">
+                    <h3>생성된 번호</h3>
+                    <div id="generated-games" class="games-container">
+                    </div>
+                    <button id="regenerate-btn" class="regenerate-button">
+                        번호 재생성
+                    </button>
+                </div>
+            </section>
+
+            <section class="frequency-section" id="frequency-section" style="display: none;">
+                <div class="frequency-card">
+                    <h3>번호 빈도 분석 (Top 20)</h3>
+                    <div id="frequency-chart" class="frequency-chart">
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>데이터 출처: 로또 당첨 번호 데이터</p>
+            <p>데이터 출처: 로또 당첨 번호 데이터</p>
+        </footer>
+    </div>
+
+    <div id="loading" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>데이터 로딩 중...</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html> 

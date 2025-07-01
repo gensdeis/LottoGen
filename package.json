@@ -1,0 +1,27 @@
+{
+  "name": "lotto-number-generator",
+  "version": "1.0.0",
+  "description": "로또 번호 생성기 - 최근 100회차 당첨 번호 분석을 통한 과학적 번호 추천",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "dev": "node --experimental-json-modules src/server.js",
+    "start": "node src/server.js"
+  },
+  "keywords": ["lotto", "number-generator", "statistics"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "@jest/globals": "^29.7.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "express": "^4.18.2"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  }
+} 
