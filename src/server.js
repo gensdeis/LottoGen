@@ -228,7 +228,6 @@ class LottoServer {
             });
         }
     }
-
     async handleToggleMock(req, res) {
         try {
             const { enable } = req.body;
@@ -263,10 +262,10 @@ class LottoServer {
     start() {
         const host = process.env.HOST || '0.0.0.0';
         this.app.listen(this.port, host, () => {
-            console.log(`? 로또 번호 생성기 서버가 시작되었습니다!`);
-            console.log(`? http://172.28.80.16:${this.port}`);
-            console.log(`? 분석 대상: 최근 ${this.analysisCount}회차 (${this.latestRound - this.analysisCount + 1}~${this.latestRound}회)`);
-            console.log(`? Mock 데이터 모드 전환: POST /api/toggle-mock {"enable": true/false}`);
+            console.log(`로또 번호 생성기 서버가 시작되었습니다!`);
+            console.log(`http://${host}:${this.port}`);
+            console.log(`분석 대상: 최근 ${this.analysisCount}회차 (${this.latestRound - this.analysisCount + 1}~${this.latestRound}회)`);
+            console.log(`Mock 데이터 모드 전환: POST /api/toggle-mock {"enable": true/false}`);
         });
     }
 }
