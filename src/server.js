@@ -347,7 +347,7 @@ class LottoServer {
     }
 
     start() {
-        const host = process.env.HOST || 'localhost';
+        const host = process.env.HOST || '0.0.0.0';
         this.app.listen(this.port, host, () => {
             console.log(`로또 번호 생성기 서버가 시작되었습니다!`);
             console.log(`http://${host}:${this.port}`);
