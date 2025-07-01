@@ -2,11 +2,12 @@ import { LottoTicket } from './LottoTicket.js';
 import { LottoNumber } from './LottoNumber.js';
 
 export class DrawResult {
-  constructor(drawNo, winningNumbers, bonusNumber) {
+  constructor(drawNo, winningNumbers, bonusNumber, drawDate = null) {
     this.#validateDrawNo(drawNo);
     this.drawNo = drawNo;
     this.winningTicket = new LottoTicket(winningNumbers);
     this.bonusNumber = new LottoNumber(bonusNumber);
+    this.drawDate = drawDate;
     this.#validateBonusNumber();
   }
 

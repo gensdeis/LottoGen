@@ -14,12 +14,12 @@ export class LottoApiRepository {
       const response = await axios.get(url);
       
       if (response.data.returnValue !== 'success') {
-        throw new Error(`${drawNo}회차 데이터를 찾을 수 없습니다`);
+        throw new Error(`${drawNo}회차 데이터 조회 실패`);
       }
       
       return this.#convertToDrawResult(response.data);
     } catch (error) {
-      if (error.message.includes('회차 데이터를 찾을 수 없습니다')) {
+      if (error.message.includes('회차 데이터 조회 실패')) {
         throw error;
       }
       throw new Error(`${drawNo}회차 데이터 조회 실패: ${error.message}`);

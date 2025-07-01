@@ -10,17 +10,17 @@ export class EnhancedLottoApiRepository {
     this.useMockData = useMockData;
     this.mockRepository = new MockLottoRepository();
     this.apiFailureCount = 0;
-    this.maxApiFailures = 5; // 연속 실패 5회 시 Mock 데이터로 전환
+    this.maxApiFailures = 5; // 최대 5회 실패 시 Mock 데이터 사용
   }
 
   async getDrawResult(drawNo) {
-    // Mock 데이터 사용 설정이거나, API 연속 실패 시 Mock 사용
+    // Mock 데이터 사용 또는 최대 실패 횟수 초과 시 Mock 데이터 사용
     if (this.useMockData || this.apiFailureCount >= this.maxApiFailures) {
       console.log(`Mock 데이터 사용: ${drawNo}회차`);
       return await this.mockRepository.getDrawResult(drawNo);
     }
 
-    // 실제 API 호출 시도
+    // API 호출 재시도
     for (let attempt = 1; attempt <= this.retryCount; attempt++) {
       try {
         const url = `${this.baseUrl}&drwNo=${drawNo}`;
@@ -34,43 +34,43 @@ export class EnhancedLottoApiRepository {
         });
         
         if (response.data.returnValue !== 'success') {
-          throw new Error(`${drawNo}회차 데이터를 찾을 수 없습니다`);
+          throw new Error(`${drawNo}회차 데이터 조회 실패`);
         }
         
-        // API 성공 시 실패 카운트 리셋
+        // API 호출 성공 시 실패 횟수 초기화
         this.apiFailureCount = 0;
         return this.#convertToDrawResult(response.data);
         
       } catch (error) {
-        if (error.message.includes('회차 데이터를 찾을 수 없습니다')) {
+        if (error.message.includes('회차 데이터 조회 실패')) {
           throw error;
         }
         
-        console.warn(`${drawNo}회차 API 호출 실패 (시도 ${attempt}/${this.retryCount}):`, error.message);
+        console.warn(`${drawNo}회차 API 호출 실패 (${attempt}/${this.retryCount}):`, error.message);
         
         if (attempt === this.retryCount) {
           this.apiFailureCount++;
           
-          // 연속 실패가 임계값에 도달하면 Mock 데이터로 대체
+          // 최대 실패 횟수 초과 시 Mock 데이터 사용
           if (this.apiFailureCount >= this.maxApiFailures) {
-            console.warn(`API 연속 실패 ${this.apiFailureCount}회, Mock 데이터로 전환합니다.`);
+            console.warn(`API 호출 실패 ${this.apiFailureCount}회, Mock 데이터 사용`);
             return await this.mockRepository.getDrawResult(drawNo);
           }
           
-          throw new Error(`${drawNo}회차 데이터 조회에 실패했습니다: ${error.message}`);
+          throw new Error(`${drawNo}회차 데이터 조회 실패: ${error.message}`);
         }
         
-        // 재시도 전 대기 (지수적 백오프)
-        const delay = Math.pow(2, attempt - 1) * 1000; // 1초, 2초, 4초...
+        // 재시도 간격 증가 (1초, 2초, 4초...)
+        const delay = Math.pow(2, attempt - 1) * 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
   }
 
   async getRecentDrawResults(latestDrawNo, count) {
-    // Mock 데이터 사용 시 Mock Repository 직접 호출
+    // Mock 데이터 사용 또는 최대 실패 횟수 초과 시 Mock 데이터 사용
     if (this.useMockData || this.apiFailureCount >= this.maxApiFailures) {
-      console.log(`Mock 데이터로 최근 ${count}회차 조회`);
+      console.log(`Mock 데이터 사용: ${count}회차`);
       return await this.mockRepository.getRecentDrawResults(latestDrawNo, count);
     }
 
@@ -82,14 +82,14 @@ export class EnhancedLottoApiRepository {
       try {
         const result = await this.getDrawResult(drawNo);
         results.push(result);
-        consecutiveFailures = 0; // 성공 시 연속 실패 카운트 리셋
+        consecutiveFailures = 0; // 연속 실패 횟수 초기화
       } catch (error) {
         consecutiveFailures++;
         console.warn(`${drawNo}회차 데이터 조회 실패:`, error.message);
         
-        // 연속 실패가 많으면 Mock 데이터로 전환
+        // 연속 실패 횟수 초과 시 Mock 데이터 사용
         if (consecutiveFailures >= 3) {
-          console.warn('연속 실패가 많아 Mock 데이터로 전환합니다.');
+          console.warn('연속 실패 횟수 초과, Mock 데이터 사용');
           this.useMockData = true;
           const mockResults = await this.mockRepository.getRecentDrawResults(latestDrawNo, count);
           return [...results, ...mockResults.slice(results.length)];
@@ -110,27 +110,31 @@ export class EnhancedLottoApiRepository {
       apiData.drwtNo6
     ];
     
+    // API에서 제공하는 날짜 형식: "2024-01-13"
+    const drawDate = apiData.drwNoDate || null;
+    
     return new DrawResult(
       apiData.drwNo,
       winningNumbers,
-      apiData.bnusNo
+      apiData.bnusNo,
+      drawDate
     );
   }
 
-  // Mock 데이터 사용 강제 설정
+  // Mock 데이터 사용
   enableMockData() {
     this.useMockData = true;
-    console.log('Mock 데이터 모드로 전환되었습니다.');
+    console.log('Mock 데이터 사용');
   }
 
-  // 실제 API 사용 재시도
+  // API 사용
   enableRealApi() {
     this.useMockData = false;
     this.apiFailureCount = 0;
-    console.log('실제 API 모드로 전환되었습니다.');
+    console.log('API 사용');
   }
 
-  // 현재 상태 확인
+  // 상태 조회
   getStatus() {
     return {
       useMockData: this.useMockData,

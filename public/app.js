@@ -17,8 +17,10 @@ class LottoApp {
             status: document.getElementById('status'),
             resultsSection: document.getElementById('results-section'),
             frequencySection: document.getElementById('frequency-section'),
+            recentWinnersSection: document.getElementById('recent-winners-section'),
             generatedGames: document.getElementById('generated-games'),
             frequencyChart: document.getElementById('frequency-chart'),
+            recentWinners: document.getElementById('recent-winners'),
             loading: document.getElementById('loading')
         };
     }
@@ -33,16 +35,31 @@ class LottoApp {
             this.showLoading();
             this.updateStatus('데이터 로딩 중...');
             
-            const response = await fetch(`${this.apiBaseUrl}/analysis`);
-            if (!response.ok) {
-                throw new Error('데이터 로딩 실패');
+            // 분석 데이터와 최근 당첨번호를 병렬로 로드
+            const [analysisResponse, winnersResponse] = await Promise.all([
+                fetch(`${this.apiBaseUrl}/analysis`),
+                fetch(`${this.apiBaseUrl}/recent-winners`)
+            ]);
+            
+            if (!analysisResponse.ok) {
+                throw new Error('분석 데이터 로딩 실패');
             }
             
-            const data = await response.json();
-            this.currentData = data;
+            const analysisData = await analysisResponse.json();
+            this.currentData = analysisData;
             
-            this.updateAnalysisInfo(data);
-            this.updateFrequencyChart(data.topNumbers);
+            this.updateAnalysisInfo(analysisData);
+            this.updateFrequencyChart(analysisData.topNumbers);
+            
+            // 최근 당첨번호 로드 및 표시
+            if (winnersResponse.ok) {
+                const winnersData = await winnersResponse.json();
+                this.updateRecentWinners(winnersData.winners);
+                this.elements.recentWinnersSection.style.display = 'block';
+            } else {
+                console.warn('최근 당첨번호 로딩 실패');
+            }
+            
             this.updateStatus('데이터 로딩 완료');
             
         } catch (error) {
@@ -78,7 +95,7 @@ class LottoApp {
             this.displayGeneratedGames(data.games);
             this.updateStatus('번호 생성 완료');
             
-            // 결과 섹션 표시
+            // 결과 표시
             this.elements.resultsSection.style.display = 'block';
             this.elements.frequencySection.style.display = 'block';
             
@@ -100,7 +117,7 @@ class LottoApp {
 
     updateAnalysisInfo(data) {
         this.elements.analyzedRounds.textContent = `${data.analyzedCount}회차`;
-        this.elements.latestRound.textContent = `${data.latestRound}회`;
+        this.elements.latestRound.textContent = `${data.latestRound}회차`;
     }
 
     updateStatus(status) {
@@ -181,6 +198,67 @@ class LottoApp {
         return itemDiv;
     }
 
+    updateRecentWinners(winners) {
+        const container = this.elements.recentWinners;
+        container.innerHTML = '';
+        
+        winners.forEach(winner => {
+            const winnerElement = this.createWinnerElement(winner);
+            container.appendChild(winnerElement);
+        });
+    }
+
+    createWinnerElement(winner) {
+        const winnerDiv = document.createElement('div');
+        winnerDiv.className = 'winner-item';
+        
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'winner-header';
+        headerDiv.innerHTML = `
+            <span class="winner-round">${winner.round}회차</span>
+            <span class="winner-date">${winner.date || ''}</span>
+        `;
+        
+        const numbersDiv = document.createElement('div');
+        numbersDiv.className = 'winner-numbers';
+        
+        // 일반 번호들
+        const mainNumbers = document.createElement('div');
+        mainNumbers.className = 'main-numbers';
+        
+        winner.numbers.forEach(number => {
+            const numberSpan = document.createElement('span');
+            numberSpan.className = 'winner-number';
+            numberSpan.textContent = number;
+            mainNumbers.appendChild(numberSpan);
+        });
+        
+        numbersDiv.appendChild(mainNumbers);
+        
+        // 보너스 번호
+        if (winner.bonusNumber) {
+            const bonusDiv = document.createElement('div');
+            bonusDiv.className = 'bonus-section';
+            
+            const plusSpan = document.createElement('span');
+            plusSpan.className = 'plus-sign';
+            plusSpan.textContent = '+';
+            
+            const bonusSpan = document.createElement('span');
+            bonusSpan.className = 'bonus-number';
+            bonusSpan.textContent = winner.bonusNumber;
+            
+            bonusDiv.appendChild(plusSpan);
+            bonusDiv.appendChild(bonusSpan);
+            numbersDiv.appendChild(bonusDiv);
+        }
+        
+        winnerDiv.appendChild(headerDiv);
+        winnerDiv.appendChild(numbersDiv);
+        
+        return winnerDiv;
+    }
+
     showLoading() {
         this.elements.loading.style.display = 'flex';
     }
@@ -194,7 +272,7 @@ class LottoApp {
     }
 }
 
-// DOM 로드 후 실행
+// DOM 초기화
 document.addEventListener('DOMContentLoaded', () => {
     new LottoApp();
 }); 

@@ -19,6 +19,7 @@ class LottoServer {
         this.setupMiddleware();
         this.setupRoutes();
         this.cacheData = null; // 분석 데이터 캐시
+        this.cachedDrawResults = null; // 추첨 결과 데이터 캐시 (성능 최적화)
     }
 
     initializeServices() {
@@ -49,6 +50,7 @@ class LottoServer {
         // API 라우트
         this.app.get('/api/analysis', this.handleAnalysis.bind(this));
         this.app.post('/api/generate', this.handleGenerate.bind(this));
+        this.app.get('/api/recent-winners', this.handleRecentWinners.bind(this));
         this.app.get('/api/status', this.handleStatus.bind(this));
         this.app.post('/api/toggle-mock', this.handleToggleMock.bind(this));
         
@@ -92,17 +94,32 @@ class LottoServer {
 
             console.log(`최근 ${this.analysisCount}회차 데이터 분석 시작...`);
             
-            // 최근 100회차 데이터 조회
-            const drawResults = await this.lottoRepository.getRecentDrawResults(
-                this.latestRound, 
-                this.analysisCount
-            );
+            let drawResults;
 
-            if (drawResults.length === 0) {
-                throw new Error('분석할 데이터가 없습니다.');
+            // 캐시된 데이터가 있으면 재사용
+            if (this.cachedDrawResults && this.cachedDrawResults.length > 0) {
+                console.log('캐시된 데이터 사용으로 빠른 분석');
+                drawResults = this.cachedDrawResults;
+            } else {
+                console.log('새 데이터 조회 중...');
+                // 최근 100회차 데이터 조회
+                drawResults = await this.lottoRepository.getRecentDrawResults(
+                    this.latestRound, 
+                    this.analysisCount
+                );
+
+                if (drawResults.length === 0) {
+                    throw new Error('분석할 데이터가 없습니다.');
+                }
+
+                // 캐시에 저장 (번호 생성에서도 재사용)
+                this.cachedDrawResults = drawResults;
+                setTimeout(() => {
+                    this.cachedDrawResults = null;
+                }, 5 * 60 * 1000);
+
+                console.log(`${drawResults.length}회차 데이터 조회 완료`);
             }
-
-            console.log(`${drawResults.length}회차 데이터 조회 완료`);
 
             // 통계 분석
             const topNumbers = this.statisticsService.getMostFrequentNumbers(drawResults, 45);
@@ -159,14 +176,29 @@ class LottoServer {
 
             console.log(`${gameCount}게임 번호 생성 시작...`);
 
-            // 최근 데이터 조회
-            const drawResults = await this.lottoRepository.getRecentDrawResults(
-                this.latestRound, 
-                this.analysisCount
-            );
+            let drawResults;
 
-            if (drawResults.length === 0) {
-                throw new Error('번호 생성을 위한 데이터가 없습니다.');
+            // 캐시된 데이터가 있으면 재사용하여 성능 최적화
+            if (this.cachedDrawResults && this.cachedDrawResults.length > 0) {
+                console.log('캐시된 데이터 사용으로 빠른 생성');
+                drawResults = this.cachedDrawResults;
+            } else {
+                console.log('새 데이터 조회 중...');
+                // 캐시된 데이터가 없으면 새로 조회
+                drawResults = await this.lottoRepository.getRecentDrawResults(
+                    this.latestRound, 
+                    this.analysisCount
+                );
+                
+                if (drawResults.length === 0) {
+                    throw new Error('번호 생성을 위한 데이터가 없습니다.');
+                }
+
+                // 다음 번을 위해 캐시 저장 (5분간 유효)
+                this.cachedDrawResults = drawResults;
+                setTimeout(() => {
+                    this.cachedDrawResults = null;
+                }, 5 * 60 * 1000);
             }
 
             // 번호 생성
@@ -205,6 +237,59 @@ class LottoServer {
         }
     }
 
+    async handleRecentWinners(req, res) {
+        try {
+            console.log('최근 5회차 당첨번호 조회 시작...');
+            
+            // 최근 5회차 데이터 조회
+            const drawResults = await this.lottoRepository.getRecentDrawResults(
+                this.latestRound, 
+                5
+            );
+
+            if (drawResults.length === 0) {
+                throw new Error('최근 당첨번호 데이터가 없습니다.');
+            }
+
+            const recentWinners = drawResults.map(result => ({
+                round: result.drawNo,
+                date: result.drawDate,
+                numbers: result.winningTicket.numbers.map(n => n.value),
+                bonusNumber: result.bonusNumber ? result.bonusNumber.value : null
+            }));
+
+            const repoStatus = this.lottoRepository.getStatus();
+            
+            res.json({
+                winners: recentWinners,
+                count: recentWinners.length,
+                dataSource: repoStatus.useMockData ? 'mock' : 'api',
+                timestamp: new Date().toISOString()
+            });
+
+            console.log(`${recentWinners.length}회차 당첨번호 조회 완료`);
+
+        } catch (error) {
+            console.error('최근 당첨번호 조회 에러:', error);
+            
+            // API 실패 시 자동으로 Mock 데이터 시도
+            if (!this.lottoRepository.getStatus().useMockData) {
+                console.log('API 실패로 인해 Mock 데이터로 재시도합니다...');
+                try {
+                    this.lottoRepository.enableMockData();
+                    return await this.handleRecentWinners(req, res);
+                } catch (mockError) {
+                    console.error('Mock 데이터로도 실패:', mockError);
+                }
+            }
+            
+            res.status(500).json({
+                error: '최근 당첨번호 조회에 실패했습니다.',
+                message: error.message
+            });
+        }
+    }
+
     async handleStatus(req, res) {
         try {
             const repoStatus = this.lottoRepository.getStatus();
@@ -234,14 +319,16 @@ class LottoServer {
             
             if (enable === true) {
                 this.lottoRepository.enableMockData();
-                this.cacheData = null; // 캐시 클리어
+                this.cacheData = null; // 분석 캐시 클리어
+                this.cachedDrawResults = null; // 추첨 결과 캐시 클리어
                 res.json({ 
                     message: 'Mock 데이터 모드로 전환되었습니다.',
                     status: this.lottoRepository.getStatus()
                 });
             } else if (enable === false) {
                 this.lottoRepository.enableRealApi();
-                this.cacheData = null; // 캐시 클리어
+                this.cacheData = null; // 분석 캐시 클리어
+                this.cachedDrawResults = null; // 추첨 결과 캐시 클리어
                 res.json({ 
                     message: '실제 API 모드로 전환되었습니다.',
                     status: this.lottoRepository.getStatus()
@@ -260,7 +347,7 @@ class LottoServer {
     }
 
     start() {
-        const host = process.env.HOST || '0.0.0.0';
+        const host = process.env.HOST || 'localhost';
         this.app.listen(this.port, host, () => {
             console.log(`로또 번호 생성기 서버가 시작되었습니다!`);
             console.log(`http://${host}:${this.port}`);

@@ -331,4 +331,134 @@ footer p {
         height: 30px;
         font-size: 0.9rem;
     }
+}
+
+/* 최근 당첨번호 스타일 */
+.recent-winners-section {
+    margin-bottom: 30px;
+}
+
+.winners-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.winners-card h3 {
+    font-size: 1.4rem;
+    margin-bottom: 20px;
+    color: #4a5568;
+}
+
+.winners-container {
+    display: grid;
+    gap: 15px;
+}
+
+.winner-item {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 4px solid #f6ad55;
+    transition: transform 0.2s ease;
+}
+
+.winner-item:hover {
+    transform: translateX(5px);
+}
+
+.winner-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.winner-round {
+    font-weight: bold;
+    color: #4a5568;
+    font-size: 1.1rem;
+}
+
+.winner-date {
+    font-size: 0.9rem;
+    color: #718096;
+}
+
+.winner-numbers {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.main-numbers {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.winner-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 8px rgba(240, 147, 251, 0.3);
+}
+
+.bonus-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.plus-sign {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #718096;
+}
+
+.bonus-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    color: #744210;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 8px rgba(252, 182, 159, 0.3);
+    border: 2px solid #f6ad55;
+}
+
+@media (max-width: 768px) {
+    .winner-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .winner-numbers {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .winner-number, .bonus-number {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
 } 

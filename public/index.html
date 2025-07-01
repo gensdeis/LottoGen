@@ -10,16 +10,16 @@
     <div class="container">
         <header>
             <h1>로또 번호 생성기</h1>
-            <p>최근 100회차 당첨 번호 기반 분석을 통한 과학적 번호 추천</p>
+            <p>최근 100회차 데이터를 분석하여 번호를 생성합니다.</p>
         </header>
 
         <main>
             <section class="info-section">
                 <div class="info-card">
-                    <h3>분석 데이터</h3>
+                    <h3>분석 대상 회차</h3>
                     <div class="stats-grid">
                         <div class="stat-item">
-                            <span class="stat-label">회차:</span>
+                            <span class="stat-label">분석 회차:</span>
                             <span id="analyzed-rounds" class="stat-value">-</span>
                         </div>
                         <div class="stat-item">
@@ -28,7 +28,7 @@
                         </div>
                         <div class="stat-item">
                             <span class="stat-label">상태:</span>
-                            <span id="status" class="stat-value">데이터 로딩 중...</span>
+                            <span id="status" class="stat-value">데이터 분석 중...</span>
                         </div>
                     </div>
                 </div>
@@ -39,16 +39,24 @@
                     <h3>번호 생성</h3>
                     <div class="controls">
                         <div class="control-group">
-                            <label for="game-count">생성할 게임 수:</label>
+                            <label for="game-count">게임 수:</label>
                             <select id="game-count">
-                                <option value="5" selected>5게임</option>
+                                <option value="1" selected>1게임</option>
                                 <option value="3">3게임</option>
-                                <option value="10">10게임</option>
+                                <option value="5">5게임</option>
                             </select>
                         </div>
                         <button id="generate-btn" class="generate-button">
                             번호 생성
                         </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="recent-winners-section" id="recent-winners-section" style="display: none;">
+                <div class="winners-card">
+                    <h3>최근 5회차 당첨번호</h3>
+                    <div id="recent-winners" class="winners-container">
                     </div>
                 </div>
             </section>
@@ -66,7 +74,7 @@
 
             <section class="frequency-section" id="frequency-section" style="display: none;">
                 <div class="frequency-card">
-                    <h3>번호 빈도 분석 (Top 20)</h3>
+                    <h3>번호 빈도 (상위 20개)</h3>
                     <div id="frequency-chart" class="frequency-chart">
                     </div>
                 </div>
@@ -74,15 +82,15 @@
         </main>
 
         <footer>
-            <p>데이터 출처: 로또 당첨 번호 데이터</p>
-            <p>데이터 출처: 로또 당첨 번호 데이터</p>
+            <p>데이터 출처: 로또 당첨 번호</p>
+            <p>데이터 분석: 로또 번호 생성기</p>
         </footer>
     </div>
 
     <div id="loading" class="loading-overlay" style="display: none;">
         <div class="loading-content">
             <div class="spinner"></div>
-            <p>데이터 로딩 중...</p>
+            <p>데이터 분석 중...</p>
         </div>
     </div>
 
