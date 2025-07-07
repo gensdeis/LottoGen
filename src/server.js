@@ -12,7 +12,7 @@ class LottoServer {
     constructor() {
         this.app = express();
         this.port = process.env.PORT || 3000;
-        this.latestRound = 1178; // 현재 최신 회차
+        this.latestRound = 1179; // 현재 최신 회차
         this.analysisCount = 100; // 분석할 회차 수
         
         this.initializeServices();
