@@ -64,7 +64,7 @@ export class MockLottoRepository {
       } while (winningNumbers.includes(bonusNumber));
 
       // 회차별 날짜 계산 (주 단위로 이전 날짜)
-      const weeksDiff = 1181 - drawNo;
+      const weeksDiff = 1182 - drawNo;
       const baseDate = new Date('2024-12-14');
       baseDate.setDate(baseDate.getDate() - (weeksDiff * 7));
       const drawDate = baseDate.toISOString().split('T')[0];
